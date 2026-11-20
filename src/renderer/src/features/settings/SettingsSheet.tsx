@@ -690,11 +690,33 @@ function ChoresTab() {
         open={editingChore !== null}
         onClose={() => setEditingChore(null)}
         title={editingChore === 'new' ? 'Add chore' : 'Edit chore'}
+        wide
+        footer={
+          <div className="flex flex-wrap items-center justify-end gap-3 px-6 py-4">
+            {editingChore !== 'new' && editingChore && (
+              <BigButton
+                variant="danger"
+                onClick={() => {
+                  choreMutations.remove.mutate({ id: editingChore.id })
+                  setEditingChore(null)
+                }}
+              >
+                Delete
+              </BigButton>
+            )}
+            <BigButton variant="ghost" onClick={() => setEditingChore(null)}>
+              Cancel
+            </BigButton>
+            <BigButton onClick={saveChore} disabled={!choreTitle.trim() || !chorePerson}>
+              Save
+            </BigButton>
+          </div>
+        }
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <div>
             <FieldLabel>Chore</FieldLabel>
-            <OskInput value={choreTitle} onChange={setChoreTitle} placeholder="e.g. Make your bed" autoFocus={editingChore === 'new'} />
+            <OskInput value={choreTitle} onChange={setChoreTitle} placeholder="e.g. Make your bed" />
           </div>
           <div>
             <FieldLabel>Who</FieldLabel>
@@ -717,7 +739,7 @@ function ChoresTab() {
               })}
             </div>
           </div>
-          <div className="flex items-end gap-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr] sm:items-end sm:gap-6">
             <div>
               <FieldLabel>Stars</FieldLabel>
               <Stepper value={choreStars} onChange={setChoreStars} max={20} />
@@ -747,7 +769,7 @@ function ChoresTab() {
               ]}
             />
             {schedule === 'weekly' && (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {WEEKDAY_SHORT.map((label, i) => {
                   const on = weekdays.includes(i)
                   return (
@@ -765,26 +787,6 @@ function ChoresTab() {
                 })}
               </div>
             )}
-          </div>
-          <div className="mt-1 flex gap-3">
-            {editingChore !== 'new' && editingChore && (
-              <BigButton
-                variant="danger"
-                onClick={() => {
-                  choreMutations.remove.mutate({ id: editingChore.id })
-                  setEditingChore(null)
-                }}
-              >
-                Delete
-              </BigButton>
-            )}
-            <div className="flex-1" />
-            <BigButton variant="ghost" onClick={() => setEditingChore(null)}>
-              Cancel
-            </BigButton>
-            <BigButton onClick={saveChore} disabled={!choreTitle.trim() || !chorePerson}>
-              Save
-            </BigButton>
           </div>
         </div>
       </Dialog>

@@ -117,7 +117,6 @@ export function Sheet({
   // the keyboard must never outlive the sheet that hosts its input
   useEffect(() => {
     if (!open) useOsk.getState().close()
-    return () => useOsk.getState().close()
   }, [open])
   if (!open) return null
   return (
@@ -146,31 +145,41 @@ export function Dialog({
   open,
   onClose,
   children,
-  title
+  title,
+  wide = false,
+  footer
 }: {
   open: boolean
   onClose: () => void
   children: ReactNode
   title?: string
+  wide?: boolean
+  footer?: ReactNode
 }) {
   // shift above the on-screen keyboard while an input inside is focused
   const oskOpen = useOsk((s) => s.target !== null)
   // the keyboard must never outlive the dialog that hosts its input
   useEffect(() => {
     if (!open) useOsk.getState().close()
-    return () => useOsk.getState().close()
   }, [open])
   if (!open) return null
   return (
     <div className={`fixed inset-0 z-50 flex justify-center p-6 ${oskOpen ? 'items-start pt-4' : 'items-center'}`}>
       <div className="animate-fade-in absolute inset-0 bg-ink/35 backdrop-blur-[3px]" onClick={onClose} />
       <div
-        className={`animate-pop relative w-full max-w-md overflow-y-auto rounded-3xl bg-card p-6 shadow-float ${
+        className={`animate-pop relative flex w-full flex-col ${
+          wide ? 'max-w-2xl' : 'max-w-md'
+        } rounded-3xl bg-card shadow-float ${footer ? 'overflow-hidden' : 'overflow-y-auto p-6'} ${
           oskOpen ? 'max-h-[52vh]' : 'max-h-[90vh]'
         }`}
       >
-        {title && <h3 className="font-display mb-4 text-2xl font-semibold">{title}</h3>}
-        {children}
+        {title && (
+          <div className={footer ? 'shrink-0 px-6 pt-6' : ''}>
+            <h3 className={`font-display text-2xl font-semibold ${footer ? '' : 'mb-4'}`}>{title}</h3>
+          </div>
+        )}
+        {footer ? <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">{children}</div> : children}
+        {footer && <div className="shrink-0 border-t border-line bg-card">{footer}</div>}
       </div>
     </div>
   )

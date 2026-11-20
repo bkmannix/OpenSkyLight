@@ -6,7 +6,7 @@
 import { spawnSync } from 'node:child_process'
 
 const ALL = [
-  'smoke', 'pin', 'ics', 'chores', 'lists', 'home', 'theme', 'news', 'camera',
+  'smoke', 'pin', 'ics', 'chores', 'lists', 'home', 'theme', 'news', 'camera', 'osk',
   'weather', 'kiosk', 'companion', 'birdnet', 'timer'
 ]
 const NEEDS_INTERNET = new Set(['weather', 'news'])

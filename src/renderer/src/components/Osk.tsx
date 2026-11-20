@@ -15,7 +15,7 @@ interface OskState {
   echo: number
   open(target: OskTarget): void
   close(): void
-  /** close only if `id` is still the active target (used by input blur) */
+  /** close only if `id` is still the active target (used by input unmount) */
   closeIf(id: string): void
   bump(): void
 }
@@ -43,25 +43,63 @@ export function OskInput({
   className?: string
 }) {
   const id = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const pointerPress = useRef(false)
   const valRef = useRef(value)
   const cbRef = useRef(onChange)
   valRef.current = value
   cbRef.current = onChange
   const { open, bump, target } = useOsk()
+  const activate = (): void => {
+    if (useOsk.getState().target?.id !== id) {
+      open({ id, get: () => valRef.current, set: (v) => cbRef.current(v) })
+    }
+  }
+
+  useEffect(() => {
+    const input = inputRef.current
+    return () => {
+      window.setTimeout(() => {
+        if (!input?.isConnected) useOsk.getState().closeIf(id)
+      }, 0)
+    }
+  }, [id])
 
   return (
     <input
+      ref={inputRef}
+      data-osk-input
       type="text"
       value={value}
       placeholder={placeholder}
       autoFocus={autoFocus}
-      onFocus={(e) => {
-        open({ id, get: () => valRef.current, set: (v) => cbRef.current(v) })
-        e.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      onPointerDown={() => {
+        pointerPress.current = true
       }}
-      onBlur={() => {
-        // keyboard keys preventDefault on mousedown, so blur means a real tap elsewhere
-        window.setTimeout(() => useOsk.getState().closeIf(id), 150)
+      onPointerUp={() => {
+        window.setTimeout(() => {
+          pointerPress.current = false
+        }, 0)
+      }}
+      onPointerCancel={() => {
+        pointerPress.current = false
+      }}
+      onFocus={(e) => {
+        const input = e.currentTarget
+        if (pointerPress.current) return
+        window.requestAnimationFrame(() => {
+          if (document.activeElement !== input) return
+          activate()
+          input.scrollIntoView({ block: 'center', behavior: 'auto' })
+        })
+      }}
+      onClick={(e) => {
+        pointerPress.current = false
+        activate()
+        const input = e.currentTarget
+        window.requestAnimationFrame(() => {
+          if (document.activeElement === input) input.scrollIntoView({ block: 'center', behavior: 'auto' })
+        })
       }}
       onChange={(e) => {
         onChange(e.target.value)
@@ -115,7 +153,7 @@ export function OskTray() {
     if (!target) return
     const onClick = (e: MouseEvent): void => {
       const el = e.target as HTMLElement | null
-      if (el?.closest('.osl-osk-tray') || el?.tagName === 'INPUT') return
+      if (el?.closest('.osl-osk-tray') || el?.closest('[data-osk-input]')) return
       close()
     }
     document.addEventListener('click', onClick, true)
